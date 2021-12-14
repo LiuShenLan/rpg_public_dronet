@@ -31,9 +31,9 @@ gflags.DEFINE_string('test_dir', "../testing", 'Folder containing'
                      ' testing experiments')
 
 # Model
-gflags.DEFINE_bool('restore_model', False, 'Whether to restore a trained'
+gflags.DEFINE_bool('restore_model', True, 'Whether to restore a trained'
                    ' model for training')
-gflags.DEFINE_string('weights_fname', "model_weights.h5", '(Relative) '
+gflags.DEFINE_string('weights_fname', "best_weights.h5", '(Relative) '
                                           'filename of model weights')
 gflags.DEFINE_string('json_model_fname', "model_struct.json",
                           'Model struct json serialization, filename')
