@@ -1,18 +1,18 @@
-import gflags
+# import gflags
 import numpy as np
 import os
 import sys
-import glob
-from random import randint
-from sklearn import metrics
-import cv2
+# import glob
+# from random import randint
+# from sklearn import metrics
+# import cv2
 
 from keras import backend as K
 import tensorflow as tf
 
 import utils
 import img_utils
-from img_utils import central_image_crop
+# from img_utils import central_image_crop
 from constants import TEST_PHASE
 from common_flags import FLAGS
 import socket
@@ -24,9 +24,10 @@ config = tf.ConfigProto()
 config.gpu_options.allow_growth = True  # 按需分配显存
 K.tensorflow_backend.set_session(tf.Session(config=config))
 
+COLLISION_THRESHOLD = 0.5
+
 def main(argv):
     # 加载路径
-    COLLISION_THRESHOLD = 0.5
     img_path = "../../dataset/hostData/realTimeImg.jpg"
     img_grayscale = FLAGS.img_mode == 'grayscale'
 
@@ -97,6 +98,7 @@ def main(argv):
         # TCP socket 发送数据
         seq = '%f' % collision_pred
         TCP_socket.send(seq.encode('utf-8'))  # send datas
+
 
 if __name__ == "__main__":
     main(sys.argv)
