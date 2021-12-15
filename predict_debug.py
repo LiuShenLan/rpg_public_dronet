@@ -5,17 +5,24 @@ import sys
 import glob
 from random import randint
 from sklearn import metrics
+import cv2
 
 from keras import backend as K
+import tensorflow as tf
 
 import utils
 import img_utils
+from img_utils import central_image_crop
 from constants import TEST_PHASE
 from common_flags import FLAGS
-
-FLAGS(sys.argv)
 import socket
 
+FLAGS(sys.argv)
+
+# 按需分配显存，防止Keras吃满显存
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True  # 按需分配显存
+K.tensorflow_backend.set_session(tf.Session(config=config))
 
 def main(argv):
     # 加载路径
@@ -56,6 +63,20 @@ def main(argv):
         # 读取图像
         while True:
             try:
+                # img_origi = cv2.imread(img_path, cv2.IMREAD_COLOR)
+                #
+                # # 图像预处理
+                # if img_grayscale:
+                #     img_origi = cv2.cvtColor(img_origi, cv2.COLOR_BGR2GRAY)
+                #
+                # img = cv2.resize(img_origi, target_size)
+                #
+                # img = central_image_crop(img, crop_size)
+                # if img_grayscale:
+                #     img = img.reshape((img.shape[0], img.shape[1], 1))
+                #
+                # img = np.asarray(img, dtype=np.float32) * np.float32(1.0 / 255.0)
+
                 img = img_utils.load_img(img_path,
                                          grayscale=img_grayscale,
                                          crop_size=crop_size,
