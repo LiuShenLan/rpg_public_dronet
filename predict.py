@@ -95,6 +95,7 @@ def main(argv):
         steer = outs[0][0][0]  # 转向数据
         collision_predict = outs[1][0][0]  # 预测碰撞概率
         collision_probability = collision_pre * collision_filter_parameters + collision_predict * (1 - collision_filter_parameters)
+        collision_pre = collision_probability
         print("\rsteer: {:<+.10f}, collision_predict: {:<.10f}   ".format(steer, collision_predict), end='')
 
         # TCP socket 发送数据
