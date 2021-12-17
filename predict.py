@@ -99,7 +99,7 @@ def main(argv):
         print("\rsteer: {:<+.10f}, collision_predict: {:<.10f}   ".format(steer, collision_predict), end='')
 
         # TCP socket 发送数据
-        seq = '%f' % collision_probability
+        seq = '{:.10f}'.format(collision_probability)
         TCP_socket.send(seq.encode('utf-8'))  # send datas
 
 
