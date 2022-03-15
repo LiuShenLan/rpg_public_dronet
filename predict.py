@@ -5,17 +5,19 @@ import sys
 # import glob
 # from random import randint
 # from sklearn import metrics
-# import cv2
+import cv2
 
 from keras import backend as K
 import tensorflow as tf
 
 import utils
 import img_utils
-# from img_utils import central_image_crop
+from img_utils import central_image_crop
 from constants import TEST_PHASE
 from common_flags import FLAGS
 import socket
+import fcntl
+import time
 
 FLAGS(sys.argv)
 
@@ -28,10 +30,12 @@ COLLISION_THRESHOLD = 0.5
 
 def main(argv):
     # 碰撞概率低通滤波
+    global img, TCP_socket
     collision_pre = 0   # 碰撞概率低通滤波前次数值
     collision_filter_parameters = 0.5   # 碰撞概率低通滤波参数，越大新进来的值影响越小
     # 加载路径
-    img_path = "../../dataset/hostData/realTimeImg.jpg"
+    img_path = "../../dataset/hostData/realTimeImg/realTimeImg.jpg"
+    img_file = open(img_path, 'r')
     img_grayscale = FLAGS.img_mode == 'grayscale'
 
     # 图片大小
@@ -65,30 +69,25 @@ def main(argv):
 
     while True:
         # 读取图像
-        while True:
-            try:
-                # img_origi = cv2.imread(img_path, cv2.IMREAD_COLOR)
-                #
-                # # 图像预处理
-                # if img_grayscale:
-                #     img_origi = cv2.cvtColor(img_origi, cv2.COLOR_BGR2GRAY)
-                #
-                # img = cv2.resize(img_origi, target_size)
-                #
-                # img = central_image_crop(img, crop_size)
-                # if img_grayscale:
-                #     img = img.reshape((img.shape[0], img.shape[1], 1))
-                #
-                # img = np.asarray(img, dtype=np.float32) * np.float32(1.0 / 255.0)
+        fcntl.flock(img_file, fcntl.LOCK_EX)
+        img = cv2.imread(img_path)
+        fcntl.flock(img_file, fcntl.LOCK_UN)
 
-                img = img_utils.load_img(img_path,
-                                         grayscale=img_grayscale,
-                                         crop_size=crop_size,
-                                         target_size=target_size) * np.float32(1.0 / 255.0)
-                break
-            except:
-                print("\rload img error                                                              ", end='')
-                continue
+        if img_grayscale:
+            if len(img.shape) != 2:
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+        if target_size:
+            if (img.shape[0], img.shape[1]) != target_size:
+                img = cv2.resize(img, target_size)
+
+        if crop_size:
+            img = central_image_crop(img, crop_size[0], crop_size[1])
+
+        if img_grayscale:
+            img = img.reshape((img.shape[0], img.shape[1], 1))
+
+        img = np.asarray(img, dtype=np.float32) * np.float32(1.0 / 255.0)
 
         # 预测结果
         outs = model.predict_on_batch(img[None])
@@ -96,11 +95,12 @@ def main(argv):
         collision_predict = outs[1][0][0]  # 预测碰撞概率
         collision_probability = collision_pre * collision_filter_parameters + collision_predict * (1 - collision_filter_parameters)
         collision_pre = collision_probability
-        print("\rsteer: {:<+.10f}, collision_predict: {:<.10f}   ".format(steer, collision_predict), end='')
 
         # TCP socket 发送数据
         seq = '{:.10f}'.format(collision_probability)
         TCP_socket.send(seq.encode('utf-8'))  # send datas
+
+        print("\rsteer: {:<+.10f}, collision_predict: {:<.10f}   ".format(steer, collision_predict), end='')
 
 
 if __name__ == "__main__":
